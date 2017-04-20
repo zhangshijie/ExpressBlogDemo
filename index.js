@@ -7,6 +7,8 @@ var flash = require('connect-flash');
 var pkg = require('./package');
 var routes = require('./routers');
 var config = require('config-lite')(path.join(__dirname,'config'));
+var winston = require('winston')
+var expressWinston = require('express-winston')
 
 var app = express();
 
@@ -51,7 +53,37 @@ app.use(require('express-formidable')({
   uploadDir: path.join(__dirname, 'public/img'),
   keepExtensions: true
 }))
+
+app.use(expressWinston.logger({
+  transports: [
+    new (winston.transports.Console)({
+      json: true,
+      colorize: true
+    }),
+    new winston.transports.File({
+      filename: 'logs/success.log'
+    })
+  ]
+}))
 routes(app)
+app.use(expressWinston.errorLogger({
+   transports: [
+     new winston.transports.Console({
+       json: true,
+       colorize: true
+     }),
+     new winston.transports.File({
+       filename: 'logs/error.log'
+     })
+   ]
+}))
+
+app.use(function( err, req, res, next){
+  res.render('error', {
+    error: err
+  })
+})
+
 app.listen(config.port, function(){
   console.log(`${pkg.name} listening on port ${config.port}`)
 })

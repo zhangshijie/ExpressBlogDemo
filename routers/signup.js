@@ -20,7 +20,8 @@ router.post('/',checkNotLogin, function(req, res, next){
   var password = req.fields.password;
   var repassword = req.fields.repassword;
 
-
+  console.log('signup enter')
+  
   try {
     if (!(name.length >= 1 && name.length <= 10)) {
       throw new Error('名字请限制在 1-10 个字符');
@@ -41,6 +42,7 @@ router.post('/',checkNotLogin, function(req, res, next){
       throw new Error('两次输入密码不一致');
     }
   } catch(e) {
+  console.log('signup catch')
     fs.unlink(req.files.avatar.path, function(err){
       if (err){
         return console.error(err)
@@ -64,6 +66,8 @@ router.post('/',checkNotLogin, function(req, res, next){
 
    UserModel.create(user)
     .then(function (result) {
+
+  console.log('注册成功')
       // 此 user 是插入 mongodb 后的值，包含 _id
       user = result.ops[0];
       // 将用户信息存入 session
@@ -75,6 +79,7 @@ router.post('/',checkNotLogin, function(req, res, next){
       res.redirect('/posts');
     })
     .catch(function (e) {
+  console.log('注册失败')
       // 注册失败，异步删除上传的头像
       fs.unlink(req.files.avatar.path, function(err){
         if (err){
@@ -86,7 +91,6 @@ router.post('/',checkNotLogin, function(req, res, next){
         req.flash('error', '用户名已被占用');
         return res.redirect('/signup');
       }
-      // res.redirect('/posts')
       next(e);
     });
 });
