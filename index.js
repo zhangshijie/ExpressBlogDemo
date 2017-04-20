@@ -31,7 +31,7 @@ app.use(session({
 }))
 
 app.use(flash())
-routes(app)
+
 
 // 设置模板全局常量
 // 使用上的区别在于：app.locals 上通常挂载常量信息（如博客名、描述、作者信息），res.locals 上通常挂载变量信息，即每次请求可能的值都不一样（如请求者信息，res.locals.user = req.session.user）。
@@ -41,14 +41,17 @@ app.locals.blog = {
 };
 // 添加模板必需的三个变量
 app.use(function(req, res, next){
-   req.session.user
-  // res.locals.user = req.session.user
+  res.locals.user = req.session.user
   res.locals.success = req.flash('success').toString()
   res.locals.error = req.flash('error').toString()
   next()
 })
 
-
+app.use(require('express-formidable')({
+  uploadDir: path.join(__dirname, 'public/img'),
+  keepExtensions: true
+}))
+routes(app)
 app.listen(config.port, function(){
   console.log(`${pkg.name} listening on port ${config.port}`)
 })
