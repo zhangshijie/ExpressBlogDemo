@@ -1,5 +1,6 @@
 var Post = require('../lib/mongo').Post
 var marked = require('marked')
+var CommentModel = require('./comments')
 
 module.exports = {
   create: function create(post) {
@@ -47,7 +48,13 @@ module.exports = {
   },
 
   delPostById: function delPostById(postId, author) {
-    return Post.remove({author: author, _id: postId}).exec()
+    return Post.remove({author: author , _id: postId})
+      .exec()
+      .then(function (res) {
+        if (res.result.ok && res.result.n > 0) {
+          return CommentModel.delCommentsByPostId(postId)
+        }
+      })
   }
 }
 
@@ -61,6 +68,27 @@ Post.plugin('contentToHtml', {
   afterFindOne: function (post) {
     if (post) {
       post.content = marked(post.content)
+    }
+    return post
+  }
+})
+
+
+Post.plugin('addCommentsCount',{
+  aftefFind: function(posts) {
+    return Promise.all(posts.map(function(post){
+      return CommentModel.getCommentsCount(post._id).then(function (commentsCount) {
+        post.commentsCount = commentsCount
+        return post
+      })
+    }))
+  },
+  aftefFindOne: function(post){
+    if(post) {
+      return CommentModel.getCommentsCount(post._id).then(function (count) {
+        post.commentsCount = count
+        return post
+      })
     }
     return post
   }
